@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         self.params = []
         self.ui.pushButton_updateStock.clicked.connect(lambda: self.to_database("update_stock", self.params))
         self.update_product_list()
+        self.ui.pushButton_addItem.clicked.connect(lambda: self.to_database("add_item"))
 
         UIFunctions.userIcon(self, "DS", "", True)
 
@@ -154,7 +155,7 @@ class MainWindow(QMainWindow):
                 return 0
             def button_clicked(i):
                 print(i.text())
-                if i.text() == "&OK":
+                if i.text() == "OK":
                     sold_item = (str(product), quantity, price, measure)
                     query = "INSERT INTO sales VALUES(?, ?, ?, date('"+date+"'), ?)"
                     self.cursor.execute(query, sold_item)
@@ -257,7 +258,8 @@ class MainWindow(QMainWindow):
             msg.setDefaultButton(QMessageBox.Ok)
 
             def clicked_button(i):
-                if i.text()=="&OK":
+                print(i.text())
+                if i.text()=="OK":
                     query = "update products set stock=" + str(stock) + " where product='" + params[0] + "'"
                     self.cursor.execute(query)
                     self.conn.commit()
@@ -279,7 +281,7 @@ class MainWindow(QMainWindow):
             self.ui.stackedWidget.setCurrentWidget(self.ui.page_addItem)
             UIFunctions.labelPage(self, "Product->Add")
             self.ui.page_addItem.setStyleSheet(UIFunctions.selectMenu(self.ui.page_addItem.styleSheet()))
-            self.ui.pushButton_addItem.clicked.connect(lambda: self.to_database("add_item"))
+            
         if page == "stock":
             data = self.ui.listWidget_products.currentItem().data(1)
             data = re.split(":", data)
@@ -293,8 +295,8 @@ class MainWindow(QMainWindow):
 
     def database_connection(self):
         self.conn = sqlite3.connect("bakery.db")
-        products_table = "CREATE TABLE IF NOT EXISTS products('product' TEXT, 'stock' INT)"
-        sales_table = "CREATE TABLE IF NOT EXISTS sales('product' TEXT, 'quantity' INT, 'amount' INT, 'date' DATE)"
+        products_table = "CREATE TABLE IF NOT EXISTS products('product' TEXT, 'stock' INT, measure TEXT, PRIMARY KEY(product))"
+        sales_table = "CREATE TABLE IF NOT EXISTS sales('product' TEXT REFERENCES products(product), 'quantity' INT, 'amount' INT, 'date' DATE, measure TEXT)"
         self.cursor = self.conn.cursor()
         self.cursor.execute(products_table)
         self.cursor.execute(sales_table)
